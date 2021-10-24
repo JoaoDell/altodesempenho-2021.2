@@ -4,30 +4,29 @@
 #include <math.h>
 
 
-enum Error {SUCESS, BAD_ARGUMENT, BAD_ALLOCATION, NODE_ALREADY_IN_MATRIX, BAD_FILE};
+enum Error {SUCESS, BAD_ARGUMENT, NULL_POINTER, NODE_ALREADY_IN_MATRIX, BAD_FILE};
 
 
 typedef struct matrixNode{
-
-    /*A sparse matrix can be represented by a data structure that stores each non-zero index of it, storing
-    its informations on a node, this node, with its i and j indexes, and its value*/
+    /*Uma matrix esparsa pode ser representada por uma estrutura de dados que guarda cada índice não-nulo da matriz,
+    armazenando as suas informações em um nó com uma casa de valor, os índices i e j*/
 
     double value;   //Valor do nó
     uint64_t i, j;  // índices do nó
+    // struct matrixNode *right; //Ponteiros para o próximo nó à direita e abaixo
 
 }matrixNode;
 
+typedef struct row{
+    matrixNode **nodes;
+    uint64_t rowsize;
+} row;
+
+
 
 typedef struct matrix{
-    /*The matrix struct should have its row size N, total number of elements M, an array storing the size of each row,
-    and an array storing each matrix node. */
-
-    /*Although its representation its different from a traditional matrix, the row-major representation is still
-    used to avoid loss of performance due to much thrashing*/
-
     uint64_t N, M;
-    uint64_t *rowsize;
-    matrixNode **nodelist;
+    row **rowlist;
 } matrix;
 
 
@@ -36,6 +35,8 @@ typedef struct matrix{
 matrixNode *startMatrixNode(double value, uint64_t i, uint64_t j);
 
 void setMatrixNode(matrixNode *mn, double value, uint64_t i, uint64_t j);
+
+row *startRow(uint64_t rowsize);
 
 matrix *startMatrix(uint64_t N,uint64_t M);
 
@@ -53,8 +54,6 @@ void subArray(uint64_t size, double *a, double *b, double *result);
 
 void numbXarray(uint64_t size, double *a, double numb, double *result);
 
-void copyArray(uint64_t size, double *array, double *result);
-
 void printArray(uint64_t size, double *array);
 
 void MatArrayMult(matrix m, double *array, double *result);
@@ -64,5 +63,3 @@ double norm(uint64_t size, double *array);
 void normalize(uint64_t size, double *array, double *result);
 
 int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t matrix_size);
-
-void checkSign(matrix *m, double *array, double *eigenvalue);

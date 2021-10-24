@@ -4,7 +4,7 @@
 #include <math.h>
 
 
-enum Error {SUCESS, BAD_ARGUMENT, BAD_ALLOCATION, NODE_ALREADY_IN_MATRIX, BAD_FILE};
+enum Error {SUCESS, BAD_ARGUMENT, NULL_POINTER, NODE_ALREADY_IN_MATRIX, BAD_FILE};
 
 
 typedef struct matrixNode{
@@ -21,9 +21,6 @@ typedef struct matrixNode{
 typedef struct matrix{
     /*The matrix struct should have its row size N, total number of elements M, an array storing the size of each row,
     and an array storing each matrix node. */
-
-    /*Although its representation its different from a traditional matrix, the row-major representation is still
-    used to avoid loss of performance due to much thrashing*/
 
     uint64_t N, M;
     uint64_t *rowsize;
@@ -53,8 +50,6 @@ void subArray(uint64_t size, double *a, double *b, double *result);
 
 void numbXarray(uint64_t size, double *a, double numb, double *result);
 
-void copyArray(uint64_t size, double *array, double *result);
-
 void printArray(uint64_t size, double *array);
 
 void MatArrayMult(matrix m, double *array, double *result);
@@ -64,5 +59,3 @@ double norm(uint64_t size, double *array);
 void normalize(uint64_t size, double *array, double *result);
 
 int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t matrix_size);
-
-void checkSign(matrix *m, double *array, double *eigenvalue);

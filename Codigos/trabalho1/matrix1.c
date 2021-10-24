@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include "matrix1.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -157,32 +157,20 @@ double *randArray(uint64_t size, int seed){
     srand(seed); //Set seed for random generator
 
     double *array = (double *) malloc(size*sizeof(double));
-    if(array == NULL){
-        fprintf(stderr, "Could not malloc array!\n");
-        return NULL;
-    }
-    else{
-        for(uint64_t i = 0; i < size; i++){
-            array[i] = pow(-1.0, rand())*rand()/RAND_MAX;
-        }
 
-        return array;
+    for(uint64_t i = 0; i < size; i++){
+        array[i] = pow(-1.0, rand())*rand()/RAND_MAX;
     }
+
+    return array;
 }
 
 double *zeroArray(uint64_t size){
     double *array = (double *) malloc(size*sizeof(double));
-
-    if(array == NULL){
-        fprintf(stderr, "Could not malloc array!\n");
-        return NULL;
+    for(uint64_t i = 0; i < size; i++){
+        array[i] = 0;
     }
-    else{
-        for(uint64_t i = 0; i < size; i++){
-            array[i] = 0;
-        }
-        return array;
-    }
+    return array;
 }
 
 void printArray(uint64_t size, double *array){
@@ -210,15 +198,10 @@ void numbXarray(uint64_t size, double *a, double numb, double *result){
 
 }
 
-void copyArray(uint64_t size, double *array, double *result){
-    for(uint64_t i = 0; i < size; i++)
-        result[i] = array[i];
-}
-
 
 void MatArrayMult(matrix m, double *array, double *result){
 
-    //Auxiliary array to store the result to avoid storing the below results on the array thats being accounted on
+    //Auxiliary vector to store the result to avoid storing the below results on the vector thats being accounted on
     double aux[m.N];
     double r = 0.0;
     
@@ -233,7 +216,7 @@ void MatArrayMult(matrix m, double *array, double *result){
         aux[i] = r;
     }
 
-    //Copying the auxiliary array values to the result array
+    //Copying the auxiliary vector values to the result vector
     for(uint64_t i = 0; i < m.N; i++)
         result[i] = aux[i];
 
@@ -277,45 +260,4 @@ int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t
     fclose(out);
 
     return SUCESS;
-}
-
-void checkSign(matrix *m, double *array, double *eigenvalue){
-    double *copy = zeroArray(m->N);
-    double *copy2 = zeroArray(m->N);
-    double aux;
-    uint64_t index;
-
-    copyArray(m->N, array, copy2);
-    MatArrayMult(*m, array, copy);
-
-    //making the array values absolute so we can get the further form zero value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        copy2[i] = fabs(copy2[i]);
-    }
-
-
-    //bubble sorting to get the higher absolute value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        for(uint64_t j = 0; j < m->N - 1; j++){
-            if(copy2[j + 1] < copy2[j]) {
-                aux = copy2[j + 1]; 
-                copy2[j + 1] = copy2[j]; 
-                copy2[j] = aux;
-            }
-        }
-    }
-
-
-    //Storing the index of the higher value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        if(copy2[m->N -1] == fabs(array[i])) index = i;
-    }
-
-    copyArray(m->N, array, copy2);
-
-    //If there's a sign change, then the eigenvalue is negative
-    if(copy[index]*copy2[index] < 0.0) *eigenvalue = -*eigenvalue;
-
-    free(copy);
-    free(copy2);
 }

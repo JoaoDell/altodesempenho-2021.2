@@ -15,42 +15,41 @@ int main(int argc, char *argv[]){
     matrix *m = getMatrixFromFile(argv[1]);
 
     double *a = randArray(m->N, 123);
-
     double *r1 = zeroArray(m->N);
     double *r2 = zeroArray(m->N); 
-    
-    double eigenvalue = norm(m->N, a);
 
+    double eigenvalue = norm(m->N, a);
     double last_eigen = 0.0;
     int iter = 0;
 
+    // printMatrix(*m);
+
 
     while(iter <= 3 || (eigenvalue - last_eigen)/eigenvalue > precision){
-        last_eigen = eigenvalue;
+        last_eigen = norm(m->N, a);
         normalize(m->N, a, a);
+        printArray(m->N, a);
+        printf("%.15lf\n", eigenvalue);
         MatArrayMult(*m, a, a);
         eigenvalue = norm(m->N, a);
         iter++;
     }
 
-    //checking whether the eigenvalue is positive or negative
-    checkSign(m, a, &eigenvalue);
-
     normalize(m->N, a, a);
 
     //Calculating the value to check whether the accounts make sense or not
     MatArrayMult(*m, a, r1);
+    // printf("%lf\n", eigenvalue);
     numbXarray(m->N, a, eigenvalue, r2);
+    // printArray(m->N, r1);
+    // printArray(m->N, r2);
     subArray(m->N, r1, r2, r1);
-
     
 
-    // printf("%.15lf\n", eigenvalue);
-    printf("%.15lf\n", norm(m->N, r1)/eigenvalue);
-
+    printf("%.15lf", norm(m->N, r1)/eigenvalue);
 
     writeToFile(argv[3], eigenvalue, a, m->N);
 
+    return 0;
 
-    return SUCESS;
 }

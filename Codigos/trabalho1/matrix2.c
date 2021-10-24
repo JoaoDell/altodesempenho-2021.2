@@ -1,4 +1,4 @@
-#include "matrix.h"
+#include "matrix2.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -23,6 +23,20 @@ void setMatrixNode(matrixNode *mn, double value, uint64_t i, uint64_t j){
     mn->i = i; mn->j = j;
 }
 
+row *startRow(uint64_t rowsize){
+    row *r = (row *) malloc(sizeof(row));
+    if(r == NULL) {
+        fprintf(stderr, "%s", "Matrix row could not be allocated!\n");
+        return NULL;
+    }
+    else{
+        r->nodes = (matrixNode **) malloc(rowsize*sizeof(matrixNode*));
+        r->rowsize = rowsize;
+        return r;
+    }
+}
+
+
 
 matrix *startMatrix(uint64_t N, uint64_t M){
 
@@ -32,17 +46,10 @@ matrix *startMatrix(uint64_t N, uint64_t M){
         return NULL;
     }
     else{
-        mat->rowsize = (uint64_t *) malloc(N*sizeof(uint64_t));
-        mat->nodelist = (matrixNode **) malloc(M*sizeof(matrixNode *));
-        if(mat->rowsize == NULL || mat->nodelist == NULL){
-            fprintf(stderr, "%s", "Matrix elements could not be allocated!\n");
-            return NULL;
-        }
-        else{
-            mat->N = N;
-            mat->M = M;
-            return mat;
-        }
+        mat->rowlist = (row **) malloc(N*sizeof(row *));
+        mat->N = N;
+        mat->M = M;
+        return mat;
     }
 }
 
@@ -57,9 +64,9 @@ matrix *getMatrixFromFile(char *filename){
 
     char line[500];
 
-    //Gets N and M from file
     fscanf(raw, "%llu\n", &N);
     fscanf(raw, "%llu\n", &M);
+    // printf("%llu\n", N);
 
     matrix *m = startMatrix(N, M);
 
@@ -76,55 +83,53 @@ matrix *getMatrixFromFile(char *filename){
         rowcheck[k] = 0;
     }
 
-    /*FIRST PART - Collecting the size of the rows*/
     long save_line1 = 0, save_line2 = 0;
     save_line1 = ftell(raw);
     save_line2 = ftell(raw);
     for(uint64_t i = 0; i < M; i++){
-        fseek(raw, save_line2, SEEK_SET); //Returns to the line it has stopped collecting the index being comparised
+        fseek(raw, save_line2, SEEK_SET); //retorna à linha que parou de coletar os índices para comparação
         fscanf(raw, "%llu %llu %lf\n", &iaux, &jaux, &value);
         save_line2 = ftell(raw);
-        fseek(raw, save_line1, SEEK_SET); //Returns to the line the matrix starts being described 
+        // printf("%ld\n", save_line2);
+        fseek(raw, save_line1, SEEK_SET); //retorna à linha aonde a matriz começa a ser ditada
 
         for(uint64_t j = 0; j < M; j++){
             fscanf(raw, "%llu %llu %lf\n", &iaa, &jaa, &vaa);
-            /*If the index captured by iaa is equal to the one captured by iaux and that line hasn't been checked yet,
-            increase the rowsize of the current row*/
-            if(iaa == iaux && !rowcheck[iaux]) rownumbers[iaux]++; 
+            // printf("%lf, %llu\n", vaa, j);
+            // printf("%llu, %llu\n", iaa, iaux);
+            if(iaa == iaux && !rowcheck[iaux]) rownumbers[iaux]++;
+            // printf("%llu, %llu, %llu\n", iaa, iaux, rownumbers[iaux]);
         }
-        rowcheck[iaux] = 1; //Checks if that line element has been already read
+        rowcheck[iaux] = 1; //checa se aquele elemento daquela linha já foi lido
     }
 
 
     for(uint64_t i = 0; i < N; i++){
-        m->rowsize[i] = rownumbers[i];
+        m->rowlist[i] = startRow(rownumbers[i]);
         rowcheck[i] = 0;
     }
 
-    /*SECOND PART - Collecting the actual row values*/
+
     fseek(raw, save_line1, SEEK_SET);
     save_line2 = ftell(raw);
 
     uint64_t counter = 0;
     for(uint64_t i = 0; i < M; i++){
-        fseek(raw, save_line2, SEEK_SET); //Returns to the line it has stopped collecting the index being comparised
+        fseek(raw, save_line2, SEEK_SET); //retorna à linha que parou de coletar os índices para comparação
         fscanf(raw, "%llu %llu %lf\n", &iaux, &jaux, &value);
         save_line2 = ftell(raw);
-        fseek(raw, save_line1, SEEK_SET); //Returns to the line the matrix starts being described 
-
+        fseek(raw, save_line1, SEEK_SET); //retorna à linha aonde a matriz começa a ser ditada
 
         for(uint64_t j = 0; j < M; j++){
             fscanf(raw, "%llu %llu %lf\n", &iaa, &jaa, &vaa);
-
             if(iaa == iaux && !rowcheck[iaux]){
-                m->nodelist[j] = startMatrixNode(vaa, iaux, jaa);
+                m->rowlist[iaux]->nodes[counter] = startMatrixNode(vaa, iaux, jaa);
                 counter++;
             }
-
         }
 
         counter = 0;
-        rowcheck[iaux] = 1; //Checks if that line element has been already read
+        rowcheck[iaux] = 1; //checa se aquele elemento daquela linha já foi lido
     }
  
     fclose(raw);
@@ -137,14 +142,13 @@ matrix *getMatrixFromFile(char *filename){
 
 void printMatrix(matrix m){
 
-    uint64_t counter = 0;
 
     for(uint64_t i = 0; i < m.N; i++){
         char line[500];
-        for(uint64_t j = 0; j < m.rowsize[i]; j++){
-            printf("%lf ", m.nodelist[counter + j]->value);
+        for(uint64_t j = 0; j < m.rowlist[i]->rowsize; j++){
+            printf("%lf ", m.rowlist[i]->nodes[j]->value);
+            // sprintf(line, "%lf ", m.rowlist[i]->nodes[j]->value);
         }
-        counter += m.rowsize[i];
         sprintf(line, "%s", "\n");
         printf("%s\n", line);
     }
@@ -157,32 +161,20 @@ double *randArray(uint64_t size, int seed){
     srand(seed); //Set seed for random generator
 
     double *array = (double *) malloc(size*sizeof(double));
-    if(array == NULL){
-        fprintf(stderr, "Could not malloc array!\n");
-        return NULL;
-    }
-    else{
-        for(uint64_t i = 0; i < size; i++){
-            array[i] = pow(-1.0, rand())*rand()/RAND_MAX;
-        }
 
-        return array;
+    for(uint64_t i = 0; i < size; i++){
+        array[i] = pow(-1.0, rand())*rand()/RAND_MAX;
     }
+
+    return array;
 }
 
 double *zeroArray(uint64_t size){
     double *array = (double *) malloc(size*sizeof(double));
-
-    if(array == NULL){
-        fprintf(stderr, "Could not malloc array!\n");
-        return NULL;
+    for(uint64_t i = 0; i < size; i++){
+        array[i] = 0;
     }
-    else{
-        for(uint64_t i = 0; i < size; i++){
-            array[i] = 0;
-        }
-        return array;
-    }
+    return array;
 }
 
 void printArray(uint64_t size, double *array){
@@ -210,30 +202,23 @@ void numbXarray(uint64_t size, double *a, double numb, double *result){
 
 }
 
-void copyArray(uint64_t size, double *array, double *result){
-    for(uint64_t i = 0; i < size; i++)
-        result[i] = array[i];
-}
-
 
 void MatArrayMult(matrix m, double *array, double *result){
 
-    //Auxiliary array to store the result to avoid storing the below results on the array thats being accounted on
+    //auxiliary vector to store the result to avoid storing the below results on the vector thats being accounted on
     double aux[m.N];
     double r = 0.0;
     
-    uint64_t counter = 0;
 
     for(uint64_t i = 0; i < m.N; i++){
         r = 0.0;
-        for(uint64_t j = 0; j < m.rowsize[i]; j++){
-            r += m.nodelist[counter + j]->value*array[m.nodelist[counter + j]->i];
+        for(uint64_t j = 0; j < m.rowlist[i]->rowsize; j++){
+            r += m.rowlist[i]->nodes[j]->value*array[m.rowlist[i]->nodes[j]->i];
         }
-        counter += m.rowsize[i];
         aux[i] = r;
     }
 
-    //Copying the auxiliary array values to the result array
+    //Copying the auxiliary vector values to the result vector
     for(uint64_t i = 0; i < m.N; i++)
         result[i] = aux[i];
 
@@ -268,6 +253,8 @@ int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t
         return BAD_FILE;
     }
 
+    // fprintf(out, "%s", "wtf");
+
     fprintf(out, "%.15lf", eigenvalue); fprintf(out, "\n");
     fprintf(out, "%llu", matrix_size); fprintf(out, "\n");
     for(uint64_t i = 0; i < matrix_size; i++){
@@ -277,45 +264,4 @@ int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t
     fclose(out);
 
     return SUCESS;
-}
-
-void checkSign(matrix *m, double *array, double *eigenvalue){
-    double *copy = zeroArray(m->N);
-    double *copy2 = zeroArray(m->N);
-    double aux;
-    uint64_t index;
-
-    copyArray(m->N, array, copy2);
-    MatArrayMult(*m, array, copy);
-
-    //making the array values absolute so we can get the further form zero value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        copy2[i] = fabs(copy2[i]);
-    }
-
-
-    //bubble sorting to get the higher absolute value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        for(uint64_t j = 0; j < m->N - 1; j++){
-            if(copy2[j + 1] < copy2[j]) {
-                aux = copy2[j + 1]; 
-                copy2[j + 1] = copy2[j]; 
-                copy2[j] = aux;
-            }
-        }
-    }
-
-
-    //Storing the index of the higher value
-    for(uint64_t i = 0; i < m->N - 1; i++){
-        if(copy2[m->N -1] == fabs(array[i])) index = i;
-    }
-
-    copyArray(m->N, array, copy2);
-
-    //If there's a sign change, then the eigenvalue is negative
-    if(copy[index]*copy2[index] < 0.0) *eigenvalue = -*eigenvalue;
-
-    free(copy);
-    free(copy2);
 }
