@@ -109,6 +109,7 @@ matrix *getMatrixFromFile(char *filename){
     for(uint64_t i = 0; i < M; i++){
         fseek(raw, save_line2, SEEK_SET); //Returns to the line it has stopped collecting the index being comparised
         fscanf(raw, "%llu %llu %lf\n", &iaux, &jaux, &value);
+        // printf("%llu, %llu, %lf\n", )
         save_line2 = ftell(raw);
         fseek(raw, save_line1, SEEK_SET); //Returns to the line the matrix starts being described 
 
@@ -221,17 +222,26 @@ void MatArrayMult(matrix m, double *array, double *result){
     //Auxiliary array to store the result to avoid storing the below results on the array thats being accounted on
     double aux[m.N];
     double r = 0.0;
+
+    for(uint64_t i = 0; i < m.N; i++)
+        aux[i] = 0.0;
     
     uint64_t counter = 0;
 
     for(uint64_t i = 0; i < m.N; i++){
         r = 0.0;
+        // printf("%llu\n", m.rowsize[i]);
         for(uint64_t j = 0; j < m.rowsize[i]; j++){
-            r += m.nodelist[counter + j]->value*array[m.nodelist[counter + j]->i];
+            printf("%lf * %lf\n\n", m.nodelist[counter + j]->value, array[m.nodelist[counter + j]->j]);
+            printf("antes %llu | %lf\n", i, r);
+            r += m.nodelist[counter + j]->value*array[m.nodelist[counter + j]->j];
+            printf("depoi %llu | %lf\n", i, r);
         }
         counter += m.rowsize[i];
         aux[i] = r;
+        printf("array = "); printArray(m.N, aux); printf("\n"); 
     }
+    // printf("\n");
 
     //Copying the auxiliary array values to the result array
     for(uint64_t i = 0; i < m.N; i++)

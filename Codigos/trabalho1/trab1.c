@@ -13,8 +13,9 @@ int main(int argc, char *argv[]){
     
 
     matrix *m = getMatrixFromFile(argv[1]);
+    printMatrix(*m);
 
-    double *a = randArray(m->N, 123);
+    double *a = randArray(m->N, 12003);
 
     double *r1 = zeroArray(m->N);
     double *r2 = zeroArray(m->N); 
@@ -24,12 +25,16 @@ int main(int argc, char *argv[]){
     double last_eigen = 0.0;
     int iter = 0;
 
-
-    while(iter <= 3 || (eigenvalue - last_eigen)/eigenvalue > precision){
+    // printArray(m->N, a);
+    while(iter <= 3 || fabs((eigenvalue - last_eigen))/eigenvalue > precision){
         last_eigen = eigenvalue;
         normalize(m->N, a, a);
+        // printf("try = %lf\n", norm(m->N, a));
+        printArray(m->N, a);
+        // printArray(m->N, a);
         MatArrayMult(*m, a, a);
         eigenvalue = norm(m->N, a);
+        printf("%.15lf\n\n", eigenvalue);
         iter++;
     }
 
