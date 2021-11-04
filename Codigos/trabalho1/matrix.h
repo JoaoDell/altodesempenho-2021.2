@@ -13,7 +13,7 @@ typedef struct matrixNode{
     its informations on a node, this node, with its i and j indexes, and its value*/
 
     double value;   //Valor do nó
-    uint64_t i, j;  // índices do nó
+    uint32_t i, j;  // índices do nó
 
 }matrixNode;
 
@@ -25,19 +25,19 @@ typedef struct matrix{
     /*Although its representation its different from a traditional matrix, the row-major representation is still
     used to avoid loss of performance due to much thrashing*/
 
-    uint64_t N, M;
-    uint64_t *rowsize;
+    uint32_t N, M;
+    uint32_t *rowsize;
     matrixNode **nodelist;
 } matrix;
 
 
 
 
-matrixNode *startMatrixNode(double value, uint64_t i, uint64_t j);
+matrixNode *startMatrixNode(double value, uint32_t i, uint32_t j);
 
-void setMatrixNode(matrixNode *mn, double value, uint64_t i, uint64_t j);
+void setMatrixNode(matrixNode *mn, double value, uint32_t i, uint32_t j);
 
-matrix *startMatrix(uint64_t N,uint64_t M);
+matrix *startMatrix(uint32_t N,uint32_t M);
 
 void addNode(matrix *m, matrixNode *n);
 
@@ -45,24 +45,24 @@ matrix *getMatrixFromFile(char *filename);
 
 void printMatrix(matrix m);
 
-double *randArray(uint64_t size, int seed);
+double *randArray(uint32_t size, int seed);
 
-double *zeroArray(uint64_t size);
+double *zeroArray(uint32_t size);
 
-void subArray(uint64_t size, double *a, double *b, double *result);
+void subArray(uint32_t size, double *a, double *b, double *result);
 
-void numbXarray(uint64_t size, double *a, double numb, double *result);
+void numbXarray(uint32_t size, double *a, double numb, double *result);
 
-void copyArray(uint64_t size, double *array, double *result);
+void copyArray(uint32_t size, double *array, double *result);
 
-void printArray(uint64_t size, double *array);
+void printArray(uint32_t size, double *array);
 
 void MatArrayMult(matrix m, double *array, double *result);
 
-double norm(uint64_t size, double *array);
+double norm(uint32_t size, double *array);
 
-void normalize(uint64_t size, double *array, double *result);
+void normalize(uint32_t size, double *array, double *result);
 
-int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint64_t matrix_size);
+int writeToFile(char *filename, double eigenvalue, double *eigenvector, uint32_t matrix_size);
 
 void checkSign(matrix *m, double *array, double *eigenvalue);
